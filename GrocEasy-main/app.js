@@ -1,128 +1,115 @@
-const appData = {
-  products: [
-    {
-      id: 1,
-      name: "Fresh Bananas (4 pieces)",
-      category: "fruits",
-      price: 40,
-      image: "🍌",
-      description: "Fresh, ripe bananas perfect for snacking or baking",
-      rating: 4.5,
-      reviews: 23,
-      stock: 15
-    },
-    {
-      id: 2,
-      name: "Organic Milk (1/2 litre)",
-      category: "dairy",
-      price: 60,
-      image: "🥛",
-      description: "Fresh organic whole milk, 1 gallon",
-      rating: 4.7,
-      reviews: 45,
-      stock: 8
-    },
-    {
-      id: 3,
-      name: "Chicken Breast (1 kg)",
-      category: "meat",
-      price: 320,
-      image: "🍗",
-      description: "Fresh boneless, skinless chicken breast, 2 lbs",
-      rating: 4.3,
-      reviews: 18,
-      stock: 12
-    },
-    {
-      id: 4,
-      name: "Whole Wheat Bread (1 packet)",
-      category: "pantry",
-      price: 45,
-      image: "🍞",
-      description: "Freshly baked whole wheat bread loaf",
-      rating: 4.4,
-      reviews: 31,
-      stock: 22
-    },
-    {
-      id: 5,
-      name: "Fresh Apples (1 kg)",
-      category: "fruits",
-      price: 120,
-      image: "🍎",
-      description: "Crisp Honeycrisp apples, 3 lb bag",
-      rating: 4.6,
-      reviews: 67,
-      stock: 18
-    },
-    {
-      id: 6,
-      name: "Greek Yogurt (1 litre)",
-      category: "dairy",
-      price: 180,
-      image: "🥛",
-      description: "Plain Greek yogurt, 32 oz container",
-      rating: 4.5,
-      reviews: 29,
-      stock: 25
-    },
-    {
-      id: 7,
-      name: "Fresh Spinach (1 bunch)",
-      category: "fruits",
-      price: 25,
-      image: "🥬",
-      description: "Fresh baby spinach leaves, 5 oz bag",
-      rating: 4.2,
-      reviews: 34,
-      stock: 20
-    },
-    {
-      id: 8,
-      name: "Salmon Fillet (300 g)",
-      category: "meat",
-      price: 450,
-      image: "🐟",
-      description: "Fresh Atlantic salmon fillet, 1 lb",
-      rating: 4.8,
-      reviews: 52,
-      stock: 6
-    }
-  ],
-  categories: [
-    {"name": "Fruits & Vegetables", "id": "fruits"},
-    {"name": "Dairy", "id": "dairy"},
-    {"name": "Meat & Seafood", "id": "meat"},
-    {"name": "Pantry", "id": "pantry"}
-  ],
-  cartItems: [
-    {id: 2, name: "Organic Milk", price: 60, quantity: 1, image: "🥛"},
-    {id: 1, name: "Fresh Bananas", price: 40, quantity: 2, image: "🍌"},
-    {id: 4, name: "Whole Wheat Bread", price: 45, quantity: 1, image: "🍞"}
-  ]
+const API_BASE = '/api';
+
+const appState = {
+  products: [],
+  categories: [],
+  cartItems: [],
+  currentUser: null,
+  token: null
 };
 
-let filteredProducts = [...appData.products];
+let filteredProducts = [];
 
-// Initialize the application based on current page
-document.addEventListener('DOMContentLoaded', function() {
-  updateCartCount();
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
+async function apiCall(endpoint, options = {}) {
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers: {
+        ...getAuthHeaders(),
+        ...options.headers
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Request failed');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+async function loadCategories() {
+  try {
+    const categories = await apiCall('/products/categories');
+    appState.categories = categories;
+    return categories;
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+    return [];
+  }
+}
+
+async function loadProducts(params = {}) {
+  try {
+    const queryParams = new URLSearchParams(params).toString();
+    const result = await apiCall(`/products${queryParams ? '?' + queryParams : ''}`);
+    appState.products = result.products || result;
+    return appState.products;
+  } catch (error) {
+    console.error('Failed to load products:', error);
+    return [];
+  }
+}
+
+async function loadCart() {
+  if (!appState.token) {
+    appState.cartItems = [];
+    return [];
+  }
   
-  // Initialize based on current page
+  try {
+    const cartData = await apiCall('/cart');
+    appState.cartItems = cartData.map(item => ({
+      id: item.products.id,
+      name: item.products.name,
+      price: Number(item.products.price),
+      quantity: item.quantity,
+      image: item.products.image_url,
+      cartItemId: item.id
+    }));
+    return appState.cartItems;
+  } catch (error) {
+    console.error('Failed to load cart:', error);
+    appState.cartItems = [];
+    return [];
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('currentUser');
+  
+  if (token && userStr) {
+    appState.token = token;
+    appState.currentUser = JSON.parse(userStr);
+    updateAuthUI();
+  }
+  
+  await loadCategories();
+  
   const currentPage = getCurrentPage();
   
   switch(currentPage) {
     case 'home':
-      initializeHomePage();
+      await initializeHomePage();
       break;
     case 'products':
-      initializeProductsPage();
+      await initializeProductsPage();
       break;
     case 'cart':
-      initializeCartPage();
+      await initializeCartPage();
       break;
     case 'checkout':
-      initializeCheckoutPage();
+      await initializeCheckoutPage();
       break;
     case 'login':
       initializeLoginPage();
@@ -131,18 +118,22 @@ document.addEventListener('DOMContentLoaded', function() {
       initializeRegisterPage();
       break;
     case 'account':
-      initializeAccountPage();
+      await initializeAccountPage();
       break;
     case 'product-detail':
-      initializeProductDetailPage();
+      await initializeProductDetailPage();
       break;
     case 'admin-dashboard':
-      initializeAdminDashboard();
+      await initializeAdminDashboard();
       break;
   }
   
-  // Add global event listeners
   addGlobalEventListeners();
+  
+  if (appState.token) {
+    await loadCart();
+    updateCartCount();
+  }
 });
 
 function getCurrentPage() {
@@ -151,59 +142,139 @@ function getCurrentPage() {
   return filename === '' || filename === 'index' ? 'home' : filename;
 }
 
-function initializeHomePage() {
-  loadFeaturedProducts();
+async function initializeHomePage() {
+  await loadFeaturedProducts();
   checkUserAuthentication();
 }
 
 function initializeRegisterPage() {
-  // Registration page specific initialization if needed
-}
-
-function initializeAdminDashboard() {
-  // Admin dashboard specific initialization if needed
-}
-
-// Authentication functions
-function checkUserAuthentication() {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-  const adminLink = document.getElementById('adminLink');
-  
-  if (currentUser.userType === 'admin' && adminLink) {
-    adminLink.style.display = 'block';
+  const registerForm = document.getElementById('register-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', handleRegister);
   }
 }
 
-function initializeProductsPage() {
+async function handleRegister(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  try {
+    const response = await apiCall('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: formData.get('email'),
+        password: formData.get('password'),
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName')
+      })
+    });
+    
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('currentUser', JSON.stringify(response.user));
+    appState.token = response.token;
+    appState.currentUser = response.user;
+    
+    showNotification('Registration successful! Welcome!');
+    setTimeout(() => window.location.href = 'index.html', 1500);
+  } catch (error) {
+    showNotification('Registration failed: ' + error.message, 'error');
+  }
+}
+
+async function initializeAdminDashboard() {
+  if (!appState.currentUser || appState.currentUser.role !== 'admin') {
+    showNotification('Admin access required', 'error');
+    setTimeout(() => window.location.href = 'index.html', 1500);
+    return;
+  }
+  
+  try {
+    const dashboardData = await apiCall('/admin/dashboard');
+    const inventoryData = await apiCall('/admin/inventory');
+    
+    document.getElementById('total-orders').textContent = dashboardData.totalOrders || 0;
+    document.getElementById('total-revenue').textContent = `₹${(dashboardData.totalRevenue || 0).toFixed(2)}`;
+    document.getElementById('low-stock-count').textContent = dashboardData.lowStockItems?.length || 0;
+    
+    const inventoryContainer = document.getElementById('inventory-table-body');
+    if (inventoryContainer && inventoryData) {
+      inventoryContainer.innerHTML = inventoryData.map(product => `
+        <tr>
+          <td>${product.name}</td>
+          <td>${product.categories?.name || 'N/A'}</td>
+          <td>₹${Number(product.price).toFixed(2)}</td>
+          <td>${product.stock}</td>
+          <td class="${product.stock < product.min_stock ? 'low-stock' : ''}">${product.min_stock}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (error) {
+    console.error('Failed to load admin dashboard:', error);
+    showNotification('Failed to load dashboard data', 'error');
+  }
+}
+
+function checkUserAuthentication() {
+  const adminLink = document.getElementById('adminLink');
+  const accountLink = document.querySelector('.nav__account');
+  
+  if (appState.currentUser) {
+    if (accountLink) {
+      accountLink.textContent = appState.currentUser.firstName || 'Account';
+      accountLink.href = 'account.html';
+    }
+    
+    if (appState.currentUser.role === 'admin' && adminLink) {
+      adminLink.style.display = 'block';
+    }
+  } else {
+    if (accountLink) {
+      accountLink.textContent = 'Login';
+      accountLink.href = 'login.html';
+    }
+  }
+}
+
+function updateAuthUI() {
+  const accountLink = document.querySelector('.nav__account');
+  if (accountLink && appState.currentUser) {
+    accountLink.textContent = appState.currentUser.firstName || 'Account';
+    accountLink.href = 'account.html';
+  }
+}
+
+async function initializeProductsPage() {
+  const products = await loadProducts({ limit: 100 });
+  filteredProducts = products;
   loadAllProducts();
   
-  // Handle category filtering from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const category = urlParams.get('category');
-  if (category) {
-    filterProducts('', category);
-    // Update active filter button
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.getAttribute('data-filter') === category) {
-        btn.classList.add('active');
-      }
-    });
+  const categorySlug = urlParams.get('category');
+  if (categorySlug) {
+    const category = appState.categories.find(c => c.slug === categorySlug);
+    if (category) {
+      filterProducts('', category.id);
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-filter') === categorySlug) {
+          btn.classList.add('active');
+        }
+      });
+    }
   }
   
-  // Add search functionality
   const searchInput = document.getElementById('product-search');
   if (searchInput) {
     searchInput.addEventListener('input', function(e) {
       const searchTerm = e.target.value;
       const activeFilter = document.querySelector('.filter-btn.active');
-      const category = activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
-      filterProducts(searchTerm, category);
+      const categorySlug = activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
+      const category = appState.categories.find(c => c.slug === categorySlug);
+      filterProducts(searchTerm, category?.id);
     });
   }
   
-  // Add filter button functionality
   const filterButtons = document.querySelectorAll('.filter-btn');
   filterButtons.forEach(btn => {
     btn.addEventListener('click', function() {
@@ -211,161 +282,262 @@ function initializeProductsPage() {
       btn.classList.add('active');
       
       const searchTerm = document.getElementById('product-search')?.value || '';
-      const category = btn.getAttribute('data-filter');
-      filterProducts(searchTerm, category);
+      const categorySlug = btn.getAttribute('data-filter');
+      const category = appState.categories.find(c => c.slug === categorySlug);
+      filterProducts(searchTerm, category?.id);
     });
   });
 }
 
-function initializeCartPage() {
+async function initializeCartPage() {
+  await loadCart();
   loadCartItems();
 }
 
-function initializeCheckoutPage() {
+async function initializeCheckoutPage() {
+  await loadCart();
   loadCheckoutItems();
   updateCheckoutTotals();
   
-  // Add checkout form handler
   const checkoutForm = document.getElementById('checkout-form');
   if (checkoutForm) {
-    checkoutForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      showNotification('Order placed successfully! Thank you for your purchase.');
-      
-      // Clear cart
-      appData.cartItems = [];
-      updateCartCount();
-      
-      // Navigate to account page
-      setTimeout(() => {
-        window.location.href = 'account.html';
-      }, 2000);
+    checkoutForm.addEventListener('submit', handleCheckout);
+  }
+}
+
+async function handleCheckout(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  try {
+    const shippingAddress = `${formData.get('address')}, ${formData.get('city')}, ${formData.get('postal')}`;
+    
+    await apiCall('/orders/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        shippingAddress,
+        paymentMethod: formData.get('payment')
+      })
     });
+    
+    showNotification('Order placed successfully! Thank you for your purchase.');
+    appState.cartItems = [];
+    updateCartCount();
+    
+    setTimeout(() => {
+      window.location.href = 'account.html';
+    }, 2000);
+  } catch (error) {
+    showNotification('Order failed: ' + error.message, 'error');
   }
 }
 
 function initializeLoginPage() {
-  // Add login form handler
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
-    loginForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      showNotification('Login successful! Welcome back, John!');
-      setTimeout(() => {
-        window.location.href = 'account.html';
-      }, 1500);
-    });
+    loginForm.addEventListener('submit', handleLogin);
   }
 }
 
-function initializeAccountPage() {
-  // Account page specific initialization if needed
+async function handleLogin(e) {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  try {
+    const response = await apiCall('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: formData.get('email'),
+        password: formData.get('password')
+      })
+    });
+    
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('currentUser', JSON.stringify(response.user));
+    appState.token = response.token;
+    appState.currentUser = response.user;
+    
+    showNotification(`Login successful! Welcome back, ${response.user.firstName || response.user.email}!`);
+    setTimeout(() => window.location.href = 'index.html', 1500);
+  } catch (error) {
+    showNotification('Login failed: ' + error.message, 'error');
+  }
 }
 
-function initializeProductDetailPage() {
-  // Get product ID from URL parameters
+async function initializeAccountPage() {
+  if (!appState.token) {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  try {
+    const profile = await apiCall('/users/profile');
+    const orders = await apiCall('/orders');
+    
+    const profileSection = document.querySelector('.account-info');
+    if (profileSection && profile) {
+      document.getElementById('user-name').textContent = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User';
+      document.getElementById('user-email').textContent = profile.email;
+    }
+    
+    const ordersContainer = document.getElementById('orders-list');
+    if (ordersContainer) {
+      if (orders && orders.length > 0) {
+        ordersContainer.innerHTML = orders.map(order => `
+          <div class="order-card">
+            <div class="order-header">
+              <div>
+                <strong>Order #${order.id.substring(0, 8)}</strong>
+                <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
+              </div>
+              <span class="order-status status-${order.status}">${order.status}</span>
+            </div>
+            <div class="order-total">Total: ₹${Number(order.total).toFixed(2)}</div>
+          </div>
+        `).join('');
+      } else {
+        ordersContainer.innerHTML = '<p>No orders yet. Start shopping!</p>';
+      }
+    }
+    
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', handleLogout);
+    }
+  } catch (error) {
+    console.error('Failed to load account:', error);
+    showNotification('Failed to load account data', 'error');
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+  appState.token = null;
+  appState.currentUser = null;
+  appState.cartItems = [];
+  showNotification('Logged out successfully');
+  setTimeout(() => window.location.href = 'index.html', 1000);
+}
+
+async function initializeProductDetailPage() {
   const urlParams = new URLSearchParams(window.location.search);
-  const productId = parseInt(urlParams.get('id'));
+  const productId = urlParams.get('id');
   
   if (productId) {
-    loadProductDetail(productId);
+    await loadProductDetail(productId);
   } else {
-    // If no product ID, redirect to products page
     window.location.href = 'products.html';
   }
 }
 
 function addGlobalEventListeners() {
-  // Mobile menu toggle
   const mobileToggle = document.querySelector('.nav__mobile-toggle');
   if (mobileToggle) {
     mobileToggle.addEventListener('click', toggleMobileMenu);
   }
   
-  // Global event delegation for dynamic elements
-  document.addEventListener('click', function(e) {
-    // Add to cart buttons
+  document.addEventListener('click', async function(e) {
     if (e.target.classList.contains('add-to-cart')) {
-      const productId = parseInt(e.target.getAttribute('data-product-id'));
-      addToCart(productId);
+      const productId = e.target.getAttribute('data-product-id');
+      await addToCart(productId);
     }
     
-    // Cart quantity buttons
     if (e.target.classList.contains('quantity-btn')) {
-      const productId = parseInt(e.target.getAttribute('data-product-id'));
+      const productId = e.target.getAttribute('data-product-id');
       const action = e.target.getAttribute('data-action');
-      updateCartQuantity(productId, action);
+      await updateCartQuantity(productId, action);
     }
     
-    // Remove from cart buttons
     if (e.target.classList.contains('cart-item__remove')) {
-      const productId = parseInt(e.target.getAttribute('data-product-id'));
-      removeFromCart(productId);
+      const productId = e.target.getAttribute('data-product-id');
+      await removeFromCart(productId);
     }
     
-    // View details buttons
     if (e.target.classList.contains('btn--secondary') && e.target.textContent.trim() === 'View Details') {
-      const productId = parseInt(e.target.getAttribute('data-product-id'));
+      const productId = e.target.getAttribute('data-product-id');
       navigateToProductDetail(productId);
     }
     
-    // Clickable product card elements (image and title)
     if (e.target.classList.contains('product-card__clickable')) {
-      const productId = parseInt(e.target.getAttribute('data-product-id'));
+      const productId = e.target.getAttribute('data-product-id');
       navigateToProductDetail(productId);
     }
   });
 }
 
-// Cart functions
-function addToCart(productId) {
-  const product = appData.products.find(p => p.id === productId);
-  if (!product) return;
-  
-  const existingItem = appData.cartItems.find(item => item.id === productId);
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    appData.cartItems.push({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image
-    });
+async function addToCart(productId) {
+  if (!appState.token) {
+    showNotification('Please login to add items to cart', 'error');
+    setTimeout(() => window.location.href = 'login.html', 1500);
+    return;
   }
   
-  updateCartCount();
-  showNotification(`${product.name} added to cart!`);
+  try {
+    const result = await apiCall('/cart/add', {
+      method: 'POST',
+      body: JSON.stringify({
+        productId: productId,
+        quantity: 1
+      })
+    });
+    
+    await loadCart();
+    updateCartCount();
+    showNotification('Item added to cart!');
+  } catch (error) {
+    showNotification('Failed to add to cart: ' + error.message, 'error');
+  }
 }
 
-function removeFromCart(productId) {
-  const index = appData.cartItems.findIndex(item => item.id === productId);
-  if (index > -1) {
-    const item = appData.cartItems[index];
-    appData.cartItems.splice(index, 1);
+async function removeFromCart(productId) {
+  const item = appState.cartItems.find(item => item.id === productId);
+  if (!item) {
+    console.error('Cart item not found for productId:', productId);
+    return;
+  }
+  
+  try {
+    await apiCall(`/cart/${item.cartItemId}`, {
+      method: 'DELETE'
+    });
+    
+    await loadCart();
     updateCartCount();
     loadCartItems();
-    showNotification(`${item.name} removed from cart`);
+    showNotification('Item removed from cart');
+  } catch (error) {
+    showNotification('Failed to remove item: ' + error.message, 'error');
   }
 }
 
-function updateCartQuantity(productId, action) {
-  const item = appData.cartItems.find(item => item.id === productId);
-  if (!item) return;
-  
-  if (action === 'increase') {
-    item.quantity += 1;
-  } else if (action === 'decrease' && item.quantity > 1) {
-    item.quantity -= 1;
+async function updateCartQuantity(productId, action) {
+  const item = appState.cartItems.find(item => item.id === productId);
+  if (!item) {
+    console.error('Cart item not found for productId:', productId);
+    return;
   }
   
-  updateCartCount();
-  loadCartItems();
+  const newQuantity = action === 'increase' ? item.quantity + 1 : item.quantity - 1;
+  
+  if (newQuantity < 1) return;
+  
+  try {
+    await apiCall(`/cart/${item.cartItemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity: newQuantity })
+    });
+    
+    await loadCart();
+    updateCartCount();
+    loadCartItems();
+  } catch (error) {
+    showNotification('Failed to update quantity: ' + error.message, 'error');
+  }
 }
 
 function updateCartCount() {
-  const totalItems = appData.cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = appState.cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartCountElements = document.querySelectorAll('.cart-count');
   cartCountElements.forEach(el => el.textContent = totalItems);
 }
@@ -374,7 +546,7 @@ function loadCartItems() {
   const container = document.getElementById('cart-items');
   if (!container) return;
   
-  if (appData.cartItems.length === 0) {
+  if (appState.cartItems.length === 0) {
     container.innerHTML = `
       <div class="empty-cart">
         <h3>Your cart is empty</h3>
@@ -386,7 +558,7 @@ function loadCartItems() {
     return;
   }
   
-  container.innerHTML = appData.cartItems.map(item => `
+  container.innerHTML = appState.cartItems.map(item => `
     <div class="cart-item">
       <div class="cart-item__image">${item.image}</div>
       <div class="cart-item__info">
@@ -407,8 +579,8 @@ function loadCartItems() {
 }
 
 function updateCartTotals() {
-  const subtotal = appData.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.0975; // 9.75% tax
+  const subtotal = appState.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.0975;
   const deliveryFee = subtotal > 0 ? 331 : 0;
   const total = subtotal + tax + deliveryFee;
   
@@ -425,7 +597,7 @@ function loadCheckoutItems() {
   const container = document.getElementById('checkout-items');
   if (!container) return;
   
-  container.innerHTML = appData.cartItems.map(item => `
+  container.innerHTML = appState.cartItems.map(item => `
     <div class="checkout-item">
       <div class="checkout-item__image">${item.image}</div>
       <div class="checkout-item__info">
@@ -438,12 +610,11 @@ function loadCheckoutItems() {
 }
 
 function updateCheckoutTotals() {
-  const subtotal = appData.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.0975; // 9.75% tax
+  const subtotal = appState.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.0975;
   const deliveryFee = subtotal > 0 ? 331 : 0;
   const total = subtotal + tax + deliveryFee;
   
-  // Update checkout summary
   const subtotalEl = document.getElementById('checkout-subtotal');
   const taxEl = document.getElementById('checkout-tax');
   const deliveryEl = document.getElementById('checkout-delivery');
@@ -454,16 +625,17 @@ function updateCheckoutTotals() {
   if (taxEl) taxEl.textContent = `₹${tax.toFixed(2)}`;
   if (deliveryEl) deliveryEl.textContent = `₹${deliveryFee.toFixed(2)}`;
   if (totalEl) totalEl.textContent = `₹${total.toFixed(2)}`;
-  if (orderButton) orderButton.textContent = `Place Order - ₹${total.toFixed(2)}`;
+  if (orderButton && orderButton.textContent.includes('Place Order')) {
+    orderButton.textContent = `Place Order - ₹${total.toFixed(2)}`;
+  }
 }
 
-// Product display functions
-function loadFeaturedProducts() {
+async function loadFeaturedProducts() {
   const container = document.getElementById('featured-products');
   if (!container) return;
   
-  const featuredProducts = appData.products.slice(0, 4);
-  container.innerHTML = featuredProducts.map(product => createProductCard(product)).join('');
+  const products = await loadProducts({ limit: 4 });
+  container.innerHTML = products.map(product => createProductCard(product)).join('');
 }
 
 function loadAllProducts() {
@@ -478,10 +650,10 @@ function createProductCard(product) {
   
   return `
     <div class="product-card" data-product-id="${product.id}">
-      <div class="product-card__image product-card__clickable" data-product-id="${product.id}">${product.image}</div>
+      <div class="product-card__image product-card__clickable" data-product-id="${product.id}">${product.image_url}</div>
       <div class="product-card__content">
         <h3 class="product-card__title product-card__clickable" data-product-id="${product.id}">${product.name}</h3>
-        <div class="product-card__price">₹${product.price.toFixed(2)}</div>
+        <div class="product-card__price">₹${Number(product.price).toFixed(2)}</div>
         <div class="product-card__rating">
           <span class="stars">${stars}</span>
           <span>(${product.reviews})</span>
@@ -507,18 +679,17 @@ function generateStars(rating) {
   return '⭐'.repeat(fullStars) + (hasHalfStar ? '⭐' : '') + '☆'.repeat(emptyStars);
 }
 
-function filterProducts(searchTerm, category) {
-  filteredProducts = appData.products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = category === 'all' || product.category === category;
-    return matchesSearch && matchesCategory;
-  });
+async function filterProducts(searchTerm, categoryId) {
+  const params = {};
+  if (searchTerm) params.search = searchTerm;
+  if (categoryId && categoryId !== 'all') params.category = categoryId;
+  params.limit = 100;
   
+  const products = await loadProducts(params);
+  filteredProducts = products;
   loadAllProducts();
 }
 
-// Mobile menu functionality
 function toggleMobileMenu() {
   const navLinks = document.querySelector('.nav__links');
   if (navLinks.style.display === 'flex') {
@@ -537,22 +708,19 @@ function toggleMobileMenu() {
   }
 }
 
-// Utility functions
-function showNotification(message) {
-  // Remove existing notification
+function showNotification(message, type = 'success') {
   const existing = document.querySelector('.notification');
   if (existing) {
     existing.remove();
   }
   
-  // Create notification element
   const notification = document.createElement('div');
   notification.className = 'notification';
   notification.style.cssText = `
     position: fixed;
     top: 20px;
     right: 20px;
-    background: var(--color-success);
+    background: ${type === 'error' ? '#ef4444' : 'var(--color-success)'};
     color: var(--color-btn-primary-text);
     padding: var(--space-16);
     border-radius: var(--radius-base);
@@ -563,7 +731,6 @@ function showNotification(message) {
   `;
   notification.textContent = message;
   
-  // Add animation keyframes if not exists
   if (!document.querySelector('#notification-styles')) {
     const style = document.createElement('style');
     style.id = 'notification-styles';
@@ -582,7 +749,6 @@ function showNotification(message) {
   
   document.body.appendChild(notification);
   
-  // Remove after 3 seconds
   setTimeout(() => {
     notification.style.animation = 'slideOut 0.3s ease';
     setTimeout(() => {
@@ -593,29 +759,26 @@ function showNotification(message) {
   }, 3000);
 }
 
-// Product detail functions
 function navigateToProductDetail(productId) {
   window.location.href = `product-detail.html?id=${productId}`;
 }
 
-function loadProductDetail(productId) {
-  const product = appData.products.find(p => p.id === productId);
-  if (!product) {
-    // Product not found, redirect to products page
+async function loadProductDetail(productId) {
+  try {
+    const product = await apiCall(`/products/${productId}`);
+    
+    const breadcrumb = document.getElementById('product-breadcrumb');
+    if (breadcrumb) {
+      breadcrumb.textContent = product.name;
+    }
+    
+    const container = document.getElementById('product-detail-content');
+    if (container) {
+      container.innerHTML = createProductDetailHTML(product);
+    }
+  } catch (error) {
+    console.error('Failed to load product:', error);
     window.location.href = 'products.html';
-    return;
-  }
-  
-  // Update breadcrumb
-  const breadcrumb = document.getElementById('product-breadcrumb');
-  if (breadcrumb) {
-    breadcrumb.textContent = product.name;
-  }
-  
-  // Load product detail content
-  const container = document.getElementById('product-detail-content');
-  if (container) {
-    container.innerHTML = createProductDetailHTML(product);
   }
 }
 
@@ -625,11 +788,11 @@ function createProductDetailHTML(product) {
   return `
     <div class="product-detail-container">
       <div class="product-detail__image">
-        <div class="product-image-large">${product.image}</div>
+        <div class="product-image-large">${product.image_url}</div>
       </div>
       <div class="product-detail__info">
         <h1 class="product-detail__title">${product.name}</h1>
-        <div class="product-detail__price">₹${product.price.toFixed(2)}</div>
+        <div class="product-detail__price">₹${Number(product.price).toFixed(2)}</div>
         <div class="product-detail__rating">
           <span class="stars">${stars}</span>
           <span class="rating-text">${product.rating} (${product.reviews} reviews)</span>
@@ -656,88 +819,3 @@ function createProductDetailHTML(product) {
     </div>
   `;
 }
-
-// Initialize sample data if not exists
-function initializeSampleData() {
-  // Initialize sample inventory data for admin dashboard
-  if (!localStorage.getItem('inventory')) {
-    const sampleInventory = [
-      {
-        id: 1,
-        name: "Fresh Bananas (4 pieces)",
-        category: "fruits",
-        price: 40,
-        stock: 15,
-        minStock: 10,
-        description: "Fresh, ripe bananas perfect for snacking or baking"
-      },
-      {
-        id: 2,
-        name: "Organic Milk (1/2 litre)",
-        category: "dairy",
-        price: 60,
-        stock: 8,
-        minStock: 15,
-        description: "Fresh organic whole milk"
-      },
-      {
-        id: 3,
-        name: "Chicken Breast (1 kg)",
-        category: "meat",
-        price: 320,
-        stock: 12,
-        minStock: 8,
-        description: "Fresh boneless, skinless chicken breast"
-      },
-      {
-        id: 4,
-        name: "Whole Wheat Bread (1 packet)",
-        category: "pantry",
-        price: 45,
-        stock: 22,
-        minStock: 5,
-        description: "Freshly baked whole wheat bread loaf"
-      },
-      {
-        id: 5,
-        name: "Fresh Apples (1 kg)",
-        category: "fruits",
-        price: 120,
-        stock: 18,
-        minStock: 10,
-        description: "Crisp Honeycrisp apples"
-      },
-      {
-        id: 6,
-        name: "Greek Yogurt (1 litre)",
-        category: "dairy",
-        price: 180,
-        stock: 25,
-        minStock: 8,
-        description: "Plain Greek yogurt"
-      },
-      {
-        id: 7,
-        name: "Fresh Spinach (1 bunch)",
-        category: "fruits",
-        price: 25,
-        stock: 20,
-        minStock: 12,
-        description: "Fresh baby spinach leaves"
-      },
-      {
-        id: 8,
-        name: "Salmon Fillet (300 g)",
-        category: "meat",
-        price: 450,
-        stock: 6,
-        minStock: 10,
-        description: "Fresh Atlantic salmon fillet"
-      }
-    ];
-    localStorage.setItem('inventory', JSON.stringify(sampleInventory));
-  }
-}
-
-// Initialize sample data when the app loads
-initializeSampleData();
