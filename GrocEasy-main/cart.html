@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - GrocEasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html">Products</a>
+                    <a href="cart.html" class="nav__cart active">
+                        Cart <span class="cart-count">4</span>
+                    </a>
+                    <a href="login.html" class="nav__account">Account</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Cart Page Content -->
+    <main>
+        <div class="container">
+            <h1>Your Shopping Cart</h1>
+            
+            <div class="cart-content">
+                <div class="cart-items" id="cart-items">
+                    <!-- Cart items will be loaded here -->
+                </div>
+
+                <div class="cart-summary">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Order Summary</h3>
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="cart-subtotal">₹0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Delivery Fee:</span>
+                                <span>₹331.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax:</span>
+                                <span id="cart-tax">₹0.00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total:</span>
+                                <span id="cart-total">₹0.00</span>
+                            </div>
+                            <button class="btn btn--primary btn--full-width" onclick="window.location.href='checkout.html'">
+                                Proceed to Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">Returns</a>
+                </div>
+                <div class="footer-section">
+                    <h4>About</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GrocEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

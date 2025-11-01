@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GrocEasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html">Products</a>
+                    <a href="admin-dashboard.html" class="active">Dashboard</a>
+                    <a href="#" id="logoutBtn">Logout</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Admin Dashboard Content -->
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1>Admin Dashboard</h1>
+                <div id="storeInfo" class="store-info">
+                    <span class="status status--info">Store: <span id="currentStore">Loading...</span></span>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-content">
+                        <h3 id="totalProducts">0</h3>
+                        <p>Total Products</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-content">
+                        <h3 id="lowStockItems">0</h3>
+                        <p>Low Stock Items</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <h3 id="totalValue">₹0</h3>
+                        <p>Inventory Value</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <h3 id="outOfStock">0</h3>
+                        <p>Out of Stock</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Management -->
+            <section class="inventory-section">
+                <div class="section-header">
+                    <h2>Inventory Management</h2>
+                    <button class="btn btn--primary" onclick="showAddProductModal()">Add New Product</button>
+                </div>
+
+                <!-- Product Filters -->
+                <div class="products-filter">
+                    <button class="filter-btn active" data-filter="all">All Products</button>
+                    <button class="filter-btn" data-filter="low-stock">Low Stock</button>
+                    <button class="filter-btn" data-filter="out-of-stock">Out of Stock</button>
+                    <button class="filter-btn" data-filter="fruits">Fruits</button>
+                    <button class="filter-btn" data-filter="dairy">Dairy</button>
+                    <button class="filter-btn" data-filter="meat">Meat</button>
+                    <button class="filter-btn" data-filter="pantry">Pantry</button>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="inventory-table-container">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <!-- Inventory items will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Product</h3>
+                <span class="close" onclick="closeProductModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId" name="productId">
+                    
+                    <div class="form-group">
+                        <label for="productName" class="form-label">Product Name</label>
+                        <input type="text" id="productName" name="productName" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productCategory" class="form-label">Category</label>
+                        <select id="productCategory" name="productCategory" class="form-control" required>
+                            <option value="">Select Category</option>
+                            <option value="fruits">Fruits & Vegetables</option>
+                            <option value="dairy">Dairy</option>
+                            <option value="meat">Meat & Seafood</option>
+                            <option value="pantry">Pantry</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productPrice" class="form-label">Price (₹)</label>
+                        <input type="number" id="productPrice" name="productPrice" class="form-control" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productStock" class="form-label">Current Stock</label>
+                        <input type="number" id="productStock" name="productStock" class="form-control" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="minStock" class="form-label">Minimum Stock Level</label>
+                        <input type="number" id="minStock" name="minStock" class="form-control" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productDescription" class="form-label">Description</label>
+                        <textarea id="productDescription" name="productDescription" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn--outline" onclick="closeProductModal()">Cancel</button>
+                        <button type="submit" class="btn btn--primary">Save Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Admin Tools</h4>
+                    <a href="#">Inventory Reports</a>
+                    <a href="#">Sales Analytics</a>
+                    <a href="#">Store Settings</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <a href="#">Admin Help</a>
+                    <a href="#">Technical Support</a>
+                    <a href="#">Contact IT</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GrocEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Check if user is logged in as admin
+        function checkAdminAccess() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!currentUser.userType || currentUser.userType !== 'admin') {
+                alert('Access denied. Admin privileges required.');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return currentUser;
+        }
+
+        // Initialize dashboard
+        function initDashboard() {
+            const user = checkAdminAccess();
+            if (!user) return;
+
+            document.getElementById('currentStore').textContent = user.storeId || 'Unassigned Store';
+            loadInventory();
+            updateDashboardStats();
+        }
+
+        // Load inventory data
+        function loadInventory() {
+            const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const tbody = document.getElementById('inventoryTableBody');
+            
+            tbody.innerHTML = '';
+            
+            inventory.forEach(product => {
+                const row = document.createElement('tr');
+                const status = getStockStatus(product.stock, product.minStock);
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="product-info">
+                            <strong>${product.name}</strong>
+                            <small class="text-secondary">${product.description || 'No description'}</small>
+                        </div>
+                    </td>
+                    <td><span class="category-badge category-${product.category}">${product.category}</span></td>
+                    <td>${product.stock}</td>
+                    <td>₹${product.price.toFixed(2)}</td>
+                    <td><span class="status status--${status.class}">${status.text}</span></td>
+                    <td>
+                        <button class="btn btn--sm btn--outline" onclick="editProduct(${product.id})">Edit</button>
+                        <button class="btn btn--sm" style="background: var(--color-error); color: white;" onclick="deleteProduct(${product.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get stock status
+        function getStockStatus(stock, minStock) {
+            if (stock === 0) {
+                return { class: 'error', text: 'Out of Stock' };
+            } else if (stock <= minStock) {
+                return { class: 'warning', text: 'Low Stock' };
+            } else {
+                return { class: 'success', text: 'In Stock' };
+            }
+        }
+
+        // Update dashboard statistics
+        function updateDashboardStats() {
+            const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            
+            const totalProducts = inventory.length;
+            const lowStockItems = inventory.filter(p => p.stock <= p.minStock && p.stock > 0).length;
+            const outOfStock = inventory.filter(p => p.stock === 0).length;
+            const totalValue = inventory.reduce((sum, p) => sum + (p.stock * p.price), 0);
+            
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('lowStockItems').textContent = lowStockItems;
+            document.getElementById('outOfStock').textContent = outOfStock;
+            document.getElementById('totalValue').textContent = '₹' + totalValue.toFixed(2);
+        }
+
+        // Show add product modal
+        function showAddProductModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Product';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        // Edit product
+        function editProduct(productId) {
+            const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const product = inventory.find(p => p.id === productId);
+            
+            if (product) {
+                document.getElementById('modalTitle').textContent = 'Edit Product';
+                document.getElementById('productId').value = product.id;
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productCategory').value = product.category;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productStock').value = product.stock;
+                document.getElementById('minStock').value = product.minStock;
+                document.getElementById('productDescription').value = product.description || '';
+                document.getElementById('productModal').style.display = 'block';
+            }
+        }
+
+        // Close product modal
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        // Delete product
+        function deleteProduct(productId) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+                inventory = inventory.filter(p => p.id !== productId);
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                loadInventory();
+                updateDashboardStats();
+            }
+        }
+
+        // Handle product form submission
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const productData = Object.fromEntries(formData);
+            
+            let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            
+            if (productData.productId) {
+                // Edit existing product
+                const index = inventory.findIndex(p => p.id == productData.productId);
+                if (index !== -1) {
+                    inventory[index] = {
+                        ...inventory[index],
+                        name: productData.productName,
+                        category: productData.productCategory,
+                        price: parseFloat(productData.productPrice),
+                        stock: parseInt(productData.productStock),
+                        minStock: parseInt(productData.minStock),
+                        description: productData.productDescription
+                    };
+                }
+            } else {
+                // Add new product
+                const newId = Math.max(...inventory.map(p => p.id || 0), 0) + 1;
+                inventory.push({
+                    id: newId,
+                    name: productData.productName,
+                    category: productData.productCategory,
+                    price: parseFloat(productData.productPrice),
+                    stock: parseInt(productData.productStock),
+                    minStock: parseInt(productData.minStock),
+                    description: productData.productDescription
+                });
+            }
+            
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            loadInventory();
+            updateDashboardStats();
+            closeProductModal();
+        });
+
+        // Filter products
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                const rows = document.querySelectorAll('#inventoryTableBody tr');
+                
+                rows.forEach(row => {
+                    if (filter === 'all') {
+                        row.style.display = '';
+                    } else if (filter === 'low-stock') {
+                        const stockText = row.querySelector('td:nth-child(3)').textContent;
+                        const statusText = row.querySelector('.status').textContent;
+                        row.style.display = statusText === 'Low Stock' ? '' : 'none';
+                    } else if (filter === 'out-of-stock') {
+                        const statusText = row.querySelector('.status').textContent;
+                        row.style.display = statusText === 'Out of Stock' ? '' : 'none';
+                    } else {
+                        const categoryText = row.querySelector('.category-badge').textContent.toLowerCase();
+                        row.style.display = categoryText.includes(filter) ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('productModal');
+            if (event.target === modal) {
+                closeProductModal();
+            }
+        }
+    </script>
+</body>
+</html>

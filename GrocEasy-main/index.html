@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrocEasy - Online Grocery Store</title>
+    <link rel="logo" href="🌱">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html" class="active">Home</a>
+                    <a href="products.html">Products</a>
+                    <a href="cart.html" class="nav__cart">
+                        Cart <span class="cart-count">4</span>
+                    </a>
+                    <a href="login.html" class="nav__account">Account</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Home Page Content -->
+    <main>
+        <div class="hero">
+            <div class="container">
+                <div class="hero__content">
+                    <h1>Fresh Groceries Delivered to Your Door</h1>
+                    <p>Quality products, great prices, fast delivery</p>
+                    <button class="btn btn--primary btn--lg" onclick="window.location.href='products.html'">Shop Now</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Categories -->
+            <section class="categories">
+                <h2>Shop by Category</h2>
+                <div class="categories__grid">
+                    <div class="category-card" data-category="fruits" onclick="window.location.href='products.html?category=fruits'">
+                        <div class="category-card__icon"><img src="images/categories/Fruits.png" alt="Fruits and Vegetables"></div>
+                        <h3>Fruits & Vegetables</h3>
+                    </div>
+                    <div class="category-card" data-category="dairy" onclick="window.location.href='products.html?category=dairy'">
+                        <div class="category-card__icon"><img src="images/categories/Dairy.png" alt="Dairy"></div>
+                        <h3>Dairy</h3>
+                    </div>
+                    <div class="category-card" data-category="meat" onclick="window.location.href='products.html?category=meat'">
+                        <div class="category-card__icon"><img src="images/categories/Meat_seafood.png" alt="Meat and Seafood"></div>
+                        <h3>Meat & Seafood</h3>
+                    </div>
+                    <div class="category-card" data-category="pantry" onclick="window.location.href='products.html?category=pantry'">
+                        <div class="category-card__icon"><img src="images/categories/Pantry.png" alt="Pantry"></div>
+                        <h3>Pantry</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured Products -->
+            <section class="featured">
+                <h2>Featured Products</h2>
+                <div class="products-grid" id="featured-products">
+                    <!-- Products will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="recent-activity">
+                <h2>Continue Shopping</h2>
+                <p>Based on your recent purchases</p>
+                <div class="activity-items">
+                    <div class="activity-item">
+                        <span>🛒</span>
+                        <div>
+                            <strong>Last order delivered</strong>
+                            <p>Order #ORD-002 • Aug 22, 2025</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <span>❤️</span>
+                        <div>
+                            <strong>Your favorites</strong>
+                            <p>Organic Milk, Fresh Bananas</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">Returns</a>
+                </div>
+                <div class="footer-section">
+                    <h4>About</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025  . All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

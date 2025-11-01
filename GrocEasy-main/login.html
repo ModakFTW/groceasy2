@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GrocEasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html">Products</a>
+                    <a href="cart.html" class="nav__cart">
+                        Cart <span class="cart-count">4</span>
+                    </a>
+                    <a href="register.html">Register</a>
+                    <a href="login.html" class="nav__account active">Login</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Login Page Content -->
+    <main>
+        <div class="container">
+            <div class="auth-container">
+                <div class="card">
+                    <div class="card__body">
+                        <h2>Sign In to Your Account</h2>
+                        <p class="text-secondary">Welcome back! Please sign in to continue.</p>
+                        
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" id="loginEmail" class="form-control" placeholder="Enter your email" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Type</label>
+                                <select id="loginUserType" class="form-control" required>
+                                    <option value="">Select Account Type</option>
+                                    <option value="customer">Customer</option>
+                                    <option value="admin">Store Admin</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn--primary btn--full-width">Sign In</button>
+                        </form>
+
+                        <div class="auth-links">
+                            <p class="text-secondary">Don't have an account? <a href="register.html" class="text-primary">Create one here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">Returns</a>
+                </div>
+                <div class="footer-section">
+                    <h4>About</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025  GrocEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Login form handling
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const userType = document.getElementById('loginUserType').value;
+            
+            // Hardcoded admin credentials for demo
+            if (email === 'groceasy@easygrocy' && password === '1234567890' && userType === 'admin') {
+                const adminUser = {
+                    email: 'groceasy@easygrocy',
+                    userType: 'admin',
+                    name: 'Admin User',
+                    storeId: 'Store-001'
+                };
+                
+                // Store current user session
+                localStorage.setItem('currentUser', JSON.stringify(adminUser));
+                alert('Welcome, Admin! Redirecting to dashboard...');
+                window.location.href = 'admin-dashboard.html';
+                return;
+            }
+            
+            // Get stored users for regular login
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Find matching user
+            const user = users.find(u => 
+                u.email === email && 
+                u.password === password && 
+                u.userType === userType
+            );
+            
+            if (user) {
+                // Store current user session
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                if (userType === 'admin') {
+                    alert('Welcome, Admin! Redirecting to dashboard...');
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    alert('Welcome back! Redirecting to your account...');
+                    window.location.href = 'account.html';
+                }
+            } else {
+                alert('Invalid credentials or account type. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

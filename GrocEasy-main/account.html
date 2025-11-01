@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - GrocEasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html">Products</a>
+                    <a href="cart.html" class="nav__cart">
+                        Cart <span class="cart-count">4</span>
+                    </a>
+                    <a href="login.html" class="nav__account active">Account</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Account Page Content -->
+    <main>
+        <div class="container">
+            <h1>My Account</h1>
+            
+            <div class="account-content">
+                <div class="account-info">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>Profile Information</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="profile-field">
+                                <label>Name:</label>
+                                <span>John Doe</span>
+                            </div>
+                            <div class="profile-field">
+                                <label>Email:</label>
+                                <span>john@example.com</span>
+                            </div>
+                            <div class="profile-field">
+                                <label>Phone:</label>
+                                <span>+1-555-0123</span>
+                            </div>
+                            <div class="profile-field">
+                                <label>Address:</label>
+                                <span>123 Main St, Springfield, IL 62701</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-history">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>Order History</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <strong>Order #ORD-002</strong>
+                                    <span class="status status--info">In Transit</span>
+                                </div>
+                                <p>Aug 22, 2025 • 5 items • ₹1,850</p>
+                                <div class="order-contact">
+                                    <span class="contact-label">Store Contact:</span>
+                                    <a href="tel:+1-555-0198" class="contact-phone">📞 (555) 019-8987</a>
+                                </div>
+                            </div>
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <strong>Order #ORD-001</strong>
+                                    <span class="status status--success">Delivered</span>
+                                </div>
+                                <p>Aug 15, 2025 • 8 items • ₹2,680</p>
+                                <div class="order-contact">
+                                    <span class="contact-label">Store Contact:</span>
+                                    <a href="tel:+1-555-0199" class="contact-phone">📞 (555) 019-9123</a>
+                                </div>
+                            </div>
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <strong>Order #ORD-003</strong>
+                                    <span class="status status--warning">Processing</span>
+                                </div>
+                                <p>Aug 25, 2025 • 3 items • ₹1,650</p>
+                                <div class="order-contact">
+                                    <span class="contact-label">Store Contact:</span>
+                                    <a href="tel:+1-555-0200" class="contact-phone">📞 (555) 020-0456</a>
+                                </div>
+                            </div>
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <strong>Order #ORD-004</strong>
+                                    <span class="status status--success">Delivered</span>
+                                </div>
+                                <p>Aug 18, 2025 • 6 items • ₹3,120</p>
+                                <div class="order-contact">
+                                    <span class="contact-label">Store Contact:</span>
+                                    <a href="tel:+1-555-0201" class="contact-phone">📞 (555) 020-1789</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">Returns</a>
+                </div>
+                <div class="footer-section">
+                    <h4>About</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GrocEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

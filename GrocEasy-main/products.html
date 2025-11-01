@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - GrocEasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html" class="active">Products</a>
+                    <a href="cart.html" class="nav__cart">
+                        Cart <span class="cart-count">4</span>
+                    </a>
+                    <a href="login.html" class="nav__account">Account</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Products Page Content -->
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1>All Products</h1>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search products..." id="product-search">
+                    <button class="btn btn--primary">Search</button>
+                </div>
+            </div>
+
+            <div class="products-filter">
+                <button class="filter-btn active" data-filter="all">All Categories</button>
+                <button class="filter-btn" data-filter="fruits">Fruits & Vegetables</button>
+                <button class="filter-btn" data-filter="dairy">Dairy</button>
+                <button class="filter-btn" data-filter="meat">Meat & Seafood</button>
+                <button class="filter-btn" data-filter="pantry">Pantry</button>
+            </div>
+
+            <div class="products-grid" id="all-products">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">Returns</a>
+                </div>
+                <div class="footer-section">
+                    <h4>About</h4>
+                    <a href="#">Our Story</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025  GrocEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
