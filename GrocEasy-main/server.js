@@ -36,9 +36,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Grocery store API is running' });
 });
 
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api') && req.method === 'GET') {
     res.sendFile(path.join(__dirname, 'index.html'));
+  } else {
+    next();
   }
 });
 
