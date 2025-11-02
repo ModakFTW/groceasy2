@@ -1,5 +1,0 @@
-- [x] Create customer-dashboard.html file
-- [x] Add 'customer-dashboard' case to app.js switch statement
-- [x] Create initializeCustomerDashboard function in app.js
-- [x] Fix redirect logic in initializeLoginPage to check user type
-- [x] Update login.html script to use consistent redirect logic
