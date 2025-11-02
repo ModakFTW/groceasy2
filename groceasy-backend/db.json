@@ -1,0 +1,150 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@groceasy.com",
+      "password": "Admin@123",
+      "userType": "admin",
+      "storeId": "store1"
+    },
+    {
+      "id": 2,
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com",
+      "password": "Customer@123",
+      "userType": "customer"
+    }
+  ],
+  "stores": [
+    {
+      "id": "store1",
+      "name": "Downtown Store",
+      "address": "123 Main St"
+    },
+    {
+      "id": "store2",
+      "name": "Mall Location",
+      "address": "456 Mall Ave"
+    },
+    {
+      "id": "store3",
+      "name": "Suburban Store",
+      "address": "789 Suburb Rd"
+    },
+    {
+      "id": "store4",
+      "name": "Airport Store",
+      "address": "321 Airport Terminal"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Fresh Bananas (12 pieces)",
+      "price": 69,
+      "description": "Fresh, ripe bananas perfect for snacking or baking",
+      "category": "fruits",
+      "image": "🍌",
+      "stock": 15
+    },
+    {
+      "id": 2,
+      "name": "Amul Toned Milk (1 litre)",
+      "price": 68,
+      "description": "Fresh toned milk, 1 litre",
+      "category": "dairy",
+      "image": "🥛",
+      "stock": 20
+    },
+    {
+      "id": 3,
+      "name": "Chicken Breast (1 kg)",
+      "price": 299,
+      "description": "Fresh boneless, skinless chicken breast",
+      "category": "meat",
+      "image": "🍗",
+      "stock": 12
+    },
+    {
+      "id": 4,
+      "name": "Whole Wheat Bread (400g)",
+      "price": 40,
+      "description": "Freshly baked whole wheat bread loaf",
+      "category": "pantry",
+      "image": "🍞",
+      "stock": 22
+    },
+    {
+      "id": 5,
+      "name": "Kashmiri Apples (1 kg)",
+      "price": 159,
+      "description": "Fresh, crisp Kashmiri apples",
+      "category": "fruits",
+      "image": "🍎",
+      "stock": 18
+    },
+    {
+      "id": 6,
+      "name": "Greek Yogurt (400g)",
+      "price": 99,
+      "description": "Creamy Greek yogurt, high in protein",
+      "category": "dairy",
+      "image": "🥛",
+      "stock": 25
+    },
+    {
+      "id": 7,
+      "name": "Fresh Spinach (250g)",
+      "price": 45,
+      "description": "Fresh, clean spinach leaves",
+      "category": "fruits",
+      "image": "🥬",
+      "stock": 20
+    },
+    {
+      "id": 8,
+      "name": "Salmon Fillet (500g)",
+      "price": 899,
+      "description": "Premium Atlantic salmon fillet",
+      "category": "meat",
+      "image": "🐟",
+      "stock": 6
+    }
+  ],
+  "carts": {
+    "1": [
+      {
+        "productId": 1,
+        "quantity": 1,
+        "name": "Fresh Bananas (12 pieces)",
+        "price": 69,
+        "image": "🍌"
+      },
+      {
+        "productId": 3,
+        "quantity": 1,
+        "name": "Chicken Breast (1 kg)",
+        "price": 299,
+        "image": "🍗"
+      },
+      {
+        "productId": 7,
+        "quantity": 1,
+        "name": "Fresh Spinach (250g)",
+        "price": 45,
+        "image": "🥬"
+      },
+      {
+        "productId": 5,
+        "quantity": 1,
+        "name": "Kashmiri Apples (1 kg)",
+        "price": 159,
+        "image": "🍎"
+      }
+    ]
+  },
+  "orders": []
+}

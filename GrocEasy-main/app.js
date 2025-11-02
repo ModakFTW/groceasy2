@@ -2,9 +2,9 @@ const appData = {
   products: [
     {
       id: 1,
-      name: "Fresh Bananas (4 pieces)",
+      name: "Fresh Bananas (12 pieces)",
       category: "fruits",
-      price: 40,
+      price: 69,
       image: "🍌",
       description: "Fresh, ripe bananas perfect for snacking or baking",
       rating: 4.5,
@@ -13,11 +13,11 @@ const appData = {
     },
     {
       id: 2,
-      name: "Organic Milk (1/2 litre)",
+      name: "Amul Toned Milk (1 litre)",
       category: "dairy",
-      price: 60,
+      price: 68,
       image: "🥛",
-      description: "Fresh organic whole milk, 1 gallon",
+      description: "Fresh toned milk, 3.5% fat content",
       rating: 4.7,
       reviews: 45,
       stock: 8
@@ -26,18 +26,18 @@ const appData = {
       id: 3,
       name: "Chicken Breast (1 kg)",
       category: "meat",
-      price: 320,
+      price: 299,
       image: "🍗",
-      description: "Fresh boneless, skinless chicken breast, 2 lbs",
+      description: "Fresh boneless, skinless chicken breast",
       rating: 4.3,
       reviews: 18,
       stock: 12
     },
     {
       id: 4,
-      name: "Whole Wheat Bread (1 packet)",
+      name: "Whole Wheat Bread (400g)",
       category: "pantry",
-      price: 45,
+      price: 40,
       image: "🍞",
       description: "Freshly baked whole wheat bread loaf",
       rating: 4.4,
@@ -46,44 +46,44 @@ const appData = {
     },
     {
       id: 5,
-      name: "Fresh Apples (1 kg)",
+      name: "Kashmiri Apples (1 kg)",
       category: "fruits",
-      price: 120,
+      price: 159,
       image: "🍎",
-      description: "Crisp Honeycrisp apples, 3 lb bag",
+      description: "Fresh, crisp Kashmiri apples",
       rating: 4.6,
       reviews: 67,
       stock: 18
     },
     {
       id: 6,
-      name: "Greek Yogurt (1 litre)",
+      name: "Greek Yogurt (400g)",
       category: "dairy",
-      price: 180,
+      price: 99,
       image: "🥛",
-      description: "Plain Greek yogurt, 32 oz container",
+      description: "Creamy Greek yogurt, high in protein",
       rating: 4.5,
       reviews: 29,
       stock: 25
     },
     {
       id: 7,
-      name: "Fresh Spinach (1 bunch)",
+      name: "Fresh Spinach (250g)",
       category: "fruits",
-      price: 25,
+      price: 45,
       image: "🥬",
-      description: "Fresh baby spinach leaves, 5 oz bag",
+      description: "Fresh, clean spinach leaves",
       rating: 4.2,
       reviews: 34,
       stock: 20
     },
     {
       id: 8,
-      name: "Salmon Fillet (300 g)",
+      name: "Salmon Fillet (500g)",
       category: "meat",
-      price: 450,
+      price: 899,
       image: "🐟",
-      description: "Fresh Atlantic salmon fillet, 1 lb",
+      description: "Premium Atlantic salmon fillet",
       rating: 4.8,
       reviews: 52,
       stock: 6
@@ -95,11 +95,7 @@ const appData = {
     {"name": "Meat & Seafood", "id": "meat"},
     {"name": "Pantry", "id": "pantry"}
   ],
-  cartItems: [
-    {id: 2, name: "Organic Milk", price: 60, quantity: 1, image: "🥛"},
-    {id: 1, name: "Fresh Bananas", price: 40, quantity: 2, image: "🍌"},
-    {id: 4, name: "Whole Wheat Bread", price: 45, quantity: 1, image: "🍞"}
-  ]
+  cartItems: []  // Initialize empty cart
 };
 
 let filteredProducts = [...appData.products];
@@ -139,6 +135,9 @@ document.addEventListener('DOMContentLoaded', function() {
     case 'admin-dashboard':
       initializeAdminDashboard();
       break;
+    case 'customer-dashboard':
+      initializeCustomerDashboard();
+      break;
   }
   
   // Add global event listeners
@@ -162,6 +161,10 @@ function initializeRegisterPage() {
 
 function initializeAdminDashboard() {
   // Admin dashboard specific initialization if needed
+}
+
+function initializeCustomerDashboard() {
+  // Customer dashboard specific initialization if needed
 }
 
 // Authentication functions
@@ -245,17 +248,41 @@ function initializeCheckoutPage() {
 }
 
 function initializeLoginPage() {
-  // Add login form handler
-  const loginForm = document.getElementById('login-form');
-  if (loginForm) {
-    loginForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      showNotification('Login successful! Welcome back, John!');
-      setTimeout(() => {
-        window.location.href = 'account.html';
-      }, 1500);
-    });
-  }
+  document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+        const response = await fetch('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: formData.get('email'),
+                password: formData.get('password')
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Login failed');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+
+        // Redirect based on user role
+        if (data.user.userType === 'admin') {
+            window.location.href = 'admin-dashboard.html';
+        } else {
+            window.location.href = 'customer-dashboard.html';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
+    }
+});
 }
 
 function initializeAccountPage() {
@@ -283,11 +310,12 @@ function addGlobalEventListeners() {
   }
   
   // Global event delegation for dynamic elements
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', async function(e) {
     // Add to cart buttons
-    if (e.target.classList.contains('add-to-cart')) {
+    if (e.target.matches('.add-to-cart')) {
+      e.preventDefault();
       const productId = parseInt(e.target.getAttribute('data-product-id'));
-      addToCart(productId);
+      await addToCart(productId);
     }
     
     // Cart quantity buttons
@@ -318,91 +346,177 @@ function addGlobalEventListeners() {
 }
 
 // Cart functions
-function addToCart(productId) {
-  const product = appData.products.find(p => p.id === productId);
-  if (!product) return;
-  
-  const existingItem = appData.cartItems.find(item => item.id === productId);
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    appData.cartItems.push({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image
-    });
+async function addToCart(productId) {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    window.location.href = 'login.html';
+    return;
   }
-  
-  updateCartCount();
-  showNotification(`${product.name} added to cart!`);
+
+  try {
+    const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productId, quantity: 1 })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add item to cart');
+    }
+
+    const product = appData.products.find(p => p.id === productId);
+    if (product) {
+      showNotification(`${product.name} added to cart!`);
+    }
+    
+    const cartItems = await response.json();
+    appData.cartItems = cartItems;
+    updateCartCount();
+    
+    if (window.location.pathname.includes('cart.html')) {
+      loadCartItems();
+    }
+  } catch (error) {
+    console.error('Add to cart error:', error);
+    showNotification('Failed to add item to cart');
+  }
 }
 
 function removeFromCart(productId) {
-  const index = appData.cartItems.findIndex(item => item.id === productId);
-  if (index > -1) {
-    const item = appData.cartItems[index];
-    appData.cartItems.splice(index, 1);
-    updateCartCount();
-    loadCartItems();
-    showNotification(`${item.name} removed from cart`);
+  // Use backend to remove the item (set quantity to 0)
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    window.location.href = 'login.html';
+    return;
   }
+
+  (async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: 0 })
+      });
+
+      if (!response.ok) throw new Error('Failed to remove item');
+
+      const cartItems = await response.json();
+      appData.cartItems = cartItems;
+      updateCartCount();
+      loadCartItems();
+      showNotification('Item removed from cart');
+    } catch (err) {
+      console.error('Remove from cart error:', err);
+      showNotification('Failed to remove item');
+    }
+  })();
 }
 
 function updateCartQuantity(productId, action) {
-  const item = appData.cartItems.find(item => item.id === productId);
+  const item = appData.cartItems.find(i => i.productId === productId);
   if (!item) return;
-  
-  if (action === 'increase') {
-    item.quantity += 1;
-  } else if (action === 'decrease' && item.quantity > 1) {
-    item.quantity -= 1;
+
+  let newQuantity = item.quantity;
+  if (action === 'increase') newQuantity = item.quantity + 1;
+  else if (action === 'decrease') newQuantity = Math.max(1, item.quantity - 1);
+
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    window.location.href = 'login.html';
+    return;
   }
+
+  (async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: newQuantity })
+      });
+
+      if (!response.ok) throw new Error('Failed to update quantity');
+
+      const cartItems = await response.json();
+      appData.cartItems = cartItems;
+      updateCartCount();
+      loadCartItems();
+    } catch (err) {
+      console.error('Update quantity error:', err);
+      showNotification('Failed to update quantity');
+    }
+  })();
+}
+
+async function updateCartCount() {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const cartCount = appData.cartItems ? appData.cartItems.reduce((sum, item) => sum + item.quantity, 0) : 0;
   
-  updateCartCount();
-  loadCartItems();
-}
-
-function updateCartCount() {
-  const totalItems = appData.cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartCountElements = document.querySelectorAll('.cart-count');
-  cartCountElements.forEach(el => el.textContent = totalItems);
+  cartCountElements.forEach(el => el.textContent = cartCount || 0);
 }
 
-function loadCartItems() {
+async function loadCartItems() {
   const container = document.getElementById('cart-items');
   if (!container) return;
   
-  if (appData.cartItems.length === 0) {
-    container.innerHTML = `
-      <div class="empty-cart">
-        <h3>Your cart is empty</h3>
-        <p>Add some products to get started!</p>
-        <button class="btn btn--primary" onclick="window.location.href='products.html'">Continue Shopping</button>
-      </div>
-    `;
-    updateCartTotals();
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  if (!currentUser) {
+    window.location.href = 'login.html';
     return;
   }
   
-  container.innerHTML = appData.cartItems.map(item => `
-    <div class="cart-item">
-      <div class="cart-item__image">${item.image}</div>
-      <div class="cart-item__info">
-        <div class="cart-item__name">${item.name}</div>
-        <div class="cart-item__price">₹${item.price.toFixed(2)} each</div>
+  try {
+    const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch cart items');
+    }
+    
+    const cartItems = await response.json();
+    appData.cartItems = cartItems;
+    
+    if (cartItems.length === 0) {
+      container.innerHTML = `
+        <div class="empty-cart">
+          <h3>Your cart is empty</h3>
+          <p>Add some products to get started!</p>
+          <button class="btn btn--primary" onclick="window.location.href='products.html'">Continue Shopping</button>
+        </div>
+      `;
+      updateCartTotals();
+      return;
+    }
+    
+    container.innerHTML = cartItems.map(item => `
+      <div class="cart-item">
+        <div class="cart-item__image">${item.image || ''}</div>
+        <div class="cart-item__info">
+          <div class="cart-item__name">${item.name}</div>
+          <div class="cart-item__price">₹${(item.price).toFixed(2)} each</div>
+        </div>
+        <div class="cart-item__quantity">
+          <button class="quantity-btn" data-product-id="${item.productId}" data-action="decrease">−</button>
+          <span>${item.quantity}</span>
+          <button class="quantity-btn" data-product-id="${item.productId}" data-action="increase">+</button>
+        </div>
+        <div class="cart-item__total">₹${(item.price * item.quantity).toFixed(2)}</div>
+        <button class="cart-item__remove" data-product-id="${item.productId}">🗑️</button>
       </div>
-      <div class="cart-item__quantity">
-        <button class="quantity-btn" data-product-id="${item.id}" data-action="decrease">−</button>
-        <span>${item.quantity}</span>
-        <button class="quantity-btn" data-product-id="${item.id}" data-action="increase">+</button>
+    `).join('');
+    
+    updateCartTotals();
+  } catch (error) {
+    console.error('Load cart error:', error);
+    container.innerHTML = `
+      <div class="error-message">
+        <h3>Failed to load cart items</h3>
+        <p>Please try again later</p>
       </div>
-      <div class="cart-item__total">₹${(item.price * item.quantity).toFixed(2)}</div>
-      <button class="cart-item__remove" data-product-id="${item.id}">🗑️</button>
-    </div>
-  `).join('');
+    `;
+  }
   
+  // final render already handled above; ensure totals updated
   updateCartTotals();
 }
 
@@ -661,80 +775,17 @@ function createProductDetailHTML(product) {
 function initializeSampleData() {
   // Initialize sample inventory data for admin dashboard
   if (!localStorage.getItem('inventory')) {
-    const sampleInventory = [
-      {
-        id: 1,
-        name: "Fresh Bananas (4 pieces)",
-        category: "fruits",
-        price: 40,
-        stock: 15,
-        minStock: 10,
-        description: "Fresh, ripe bananas perfect for snacking or baking"
-      },
-      {
-        id: 2,
-        name: "Organic Milk (1/2 litre)",
-        category: "dairy",
-        price: 60,
-        stock: 8,
-        minStock: 15,
-        description: "Fresh organic whole milk"
-      },
-      {
-        id: 3,
-        name: "Chicken Breast (1 kg)",
-        category: "meat",
-        price: 320,
-        stock: 12,
-        minStock: 8,
-        description: "Fresh boneless, skinless chicken breast"
-      },
-      {
-        id: 4,
-        name: "Whole Wheat Bread (1 packet)",
-        category: "pantry",
-        price: 45,
-        stock: 22,
-        minStock: 5,
-        description: "Freshly baked whole wheat bread loaf"
-      },
-      {
-        id: 5,
-        name: "Fresh Apples (1 kg)",
-        category: "fruits",
-        price: 120,
-        stock: 18,
-        minStock: 10,
-        description: "Crisp Honeycrisp apples"
-      },
-      {
-        id: 6,
-        name: "Greek Yogurt (1 litre)",
-        category: "dairy",
-        price: 180,
-        stock: 25,
-        minStock: 8,
-        description: "Plain Greek yogurt"
-      },
-      {
-        id: 7,
-        name: "Fresh Spinach (1 bunch)",
-        category: "fruits",
-        price: 25,
-        stock: 20,
-        minStock: 12,
-        description: "Fresh baby spinach leaves"
-      },
-      {
-        id: 8,
-        name: "Salmon Fillet (300 g)",
-        category: "meat",
-        price: 450,
-        stock: 6,
-        minStock: 10,
-        description: "Fresh Atlantic salmon fillet"
-      }
-    ];
+    // Mirror current appData.products to keep inventory consistent
+    const sampleInventory = appData.products.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      stock: p.stock,
+      minStock: Math.max(5, Math.floor(p.stock / 2)),
+      description: p.description
+    }));
+
     localStorage.setItem('inventory', JSON.stringify(sampleInventory));
   }
 }

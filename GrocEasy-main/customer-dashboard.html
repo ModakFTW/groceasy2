@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - GrocEasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav__brand">
+                    <a href="index.html" class="nav__logo">
+                        <h2>🌱 GrocEasy</h2>
+                    </a>
+                </div>
+                <div class="nav__links">
+                    <a href="index.html">Home</a>
+                    <a href="products.html">Products</a>
+                    <a href="cart.html" class="nav__cart">
+                        Cart <span class="cart-count">0</span>
+                    </a>
+                    <a href="customer-dashboard.html" class="active">Dashboard</a>
+                    <a href="#" id="logoutBtn">Logout</a>
+                </div>
+                <div class="nav__mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Customer Dashboard Content -->
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1>My Dashboard</h1>
+                <div id="userInfo" class="user-info">
+                    <span class="welcome-message">Welcome back, <span id="userName">Loading...</span>!</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">🛒</div>
+                    <div class="stat-content">
+                        <h3 id="cartItems">0</h3>
+                        <p>Items in Cart</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-content">
+                        <h3 id="totalOrders">0</h3>
+                        <p>Total Orders</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <h3 id="totalSpent">₹0</h3>
+                        <p>Total Spent</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <h3 id="favoriteCategory">None</h3>
+                        <p>Favorite Category</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="action-buttons">
+                    <button class="btn btn--primary" onclick="window.location.href='products.html'">
+                        🛍️ Continue Shopping
+                    </button>
+                    <button class="btn btn--outline" onclick="window.location.href='cart.html'">
+                        🛒 View Cart
+                    </button>
+                    <button class="btn btn--outline" onclick="window.location.href='account.html'">
+                        👤 Account Settings
+                    </button>
+                </div>
+            </section>
+
+            <!-- Recent Orders -->
+            <section class="recent-orders">
+                <div class="section-header">
+                    <h2>Recent Orders</h2>
+                    <button class="btn btn--outline" onclick="window.location.href='account.html'">
+                        View All Orders
+                    </button>
+                </div>
+                <div id="recentOrdersContainer" class="orders-container">
+                    <div class="empty-state">
+                        <h3>No orders yet</h3>
+                        <p>Your order history will appear here once you make your first purchase.</p>
+                        <button class="btn btn--primary" onclick="window.location.href='products.html'">
+                            Start Shopping
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recommended Products -->
+            <section class="recommended-products">
+                <h2>Recommended for You</h2>
+                <div id="recommendedProducts" class="products-grid">
+                    <!-- Recommended products will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GrocEasy</h4>
+                    <p>Your trusted online grocery store</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Help Center</a>
+                    <a href="#">Returns</a>
+                </div>
+                <div class="footer-section">
+                    <h4>My Account</h4>
+                    <a href="#">Order History</a>
+                    <a href="#">Account Settings</a>
+                    <a href="#">Wishlist</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GrocEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Check if user is logged in
+        function checkUserAccess() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!currentUser.id) {
+                alert('Please log in to access your dashboard.');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return currentUser;
+        }
+
+        // Initialize dashboard
+        function initCustomerDashboard() {
+            const user = checkUserAccess();
+            if (!user) return;
+
+            document.getElementById('userName').textContent = user.firstName || user.email;
+            loadDashboardStats();
+            loadRecentOrders();
+            loadRecommendedProducts();
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            try {
+                // Load cart items
+                const cartResponse = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`);
+                if (cartResponse.ok) {
+                    const cartItems = await cartResponse.json();
+                    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+                    document.getElementById('cartItems').textContent = totalItems;
+                }
+
+                // Load orders (placeholder for now)
+                document.getElementById('totalOrders').textContent = '0';
+                document.getElementById('totalSpent').textContent = '₹0';
+                document.getElementById('favoriteCategory').textContent = 'Fruits';
+
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // Load recent orders
+        async function loadRecentOrders() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/orders/user/${currentUser.id}`);
+                if (response.ok) {
+                    const orders = await response.json();
+                    if (orders.length > 0) {
+                        displayRecentOrders(orders.slice(0, 3)); // Show last 3 orders
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading recent orders:', error);
+            }
+        }
+
+        // Display recent orders
+        function displayRecentOrders(orders) {
+            const container = document.getElementById('recentOrdersContainer');
+            container.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">Order #${order.id}</span>
+                        <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
+                        <span class="order-status status--${order.status.toLowerCase()}">${order.status}</span>
+                    </div>
+                    <div class="order-items">
+                        ${order.items.slice(0, 2).map(item => `
+                            <div class="order-item">
+                                <span>${item.name}</span>
+                                <span>Qty: ${item.quantity}</span>
+                            </div>
+                        `).join('')}
+                        ${order.items.length > 2 ? `<span class="more-items">+${order.items.length - 2} more items</span>` : ''}
+                    </div>
+                    <div class="order-total">Total: ₹${order.total.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Load recommended products
+        function loadRecommendedProducts() {
+            const container = document.getElementById('recommendedProducts');
+            const recommendedProducts = appData.products.slice(0, 4); // Show first 4 products as recommendations
+
+            container.innerHTML = recommendedProducts.map(product => `
+                <div class="product-card" data-product-id="${product.id}">
+                    <div class="product-card__image product-card__clickable" data-product-id="${product.id}">${product.image}</div>
+                    <div class="product-card__content">
+                        <h3 class="product-card__title product-card__clickable" data-product-id="${product.id}">${product.name}</h3>
+                        <div class="product-card__price">₹${product.price.toFixed(2)}</div>
+                        <div class="product-card__rating">
+                            <span class="stars">${generateStars(product.rating)}</span>
+                            <span>(${product.reviews})</span>
+                        </div>
+                        <div class="product-card__actions">
+                            <button class="btn btn--primary add-to-cart" data-product-id="${product.id}">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Generate star rating
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 !== 0;
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+            return '⭐'.repeat(fullStars) + (hasHalfStar ? '⭐' : '') + '☆'.repeat(emptyStars);
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initCustomerDashboard);
+    </script>
+</body>
+</html>

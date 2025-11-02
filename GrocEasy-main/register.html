@@ -82,18 +82,20 @@
                                 </select>
                             </div>
 
-                            <div class="form-group">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" id="password" name="password" class="form-control" required minlength="8">
-                                <small class="text-secondary">Password must be at least 8 characters long</small>
-                            </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           required minlength="8" 
+                           pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$">
+                    <small class="text-secondary">Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character</small>
+                    <div class="password-strength" id="passwordStrength"></div>
+                </div>
 
-                            <div class="form-group">
-                                <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
-                            </div>
-
-                            <div class="form-group">
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                    <div class="password-match" id="passwordMatch"></div>
+                </div>                            <div class="form-group">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="terms" name="terms" required>
                                     <span>I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a></span>
@@ -156,15 +158,66 @@
             }
         });
 
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function(e) {
+            const password = e.target.value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            const strength = checkPasswordStrength(password);
+            
+            strengthDiv.innerHTML = `Password Strength: ${strength.message}`;
+            strengthDiv.className = `password-strength ${strength.class}`;
+        });
+
+        // Password match checker
+        document.getElementById('confirmPassword').addEventListener('input', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = e.target.value;
+            const matchDiv = document.getElementById('passwordMatch');
+            
+            if (confirmPassword) {
+                if (password === confirmPassword) {
+                    matchDiv.innerHTML = 'Passwords match ✓';
+                    matchDiv.className = 'password-match match';
+                } else {
+                    matchDiv.innerHTML = 'Passwords do not match ✗';
+                    matchDiv.className = 'password-match no-match';
+                }
+            } else {
+                matchDiv.innerHTML = '';
+            }
+        });
+
+        function checkPasswordStrength(password) {
+            const strongRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{10,})');
+            const mediumRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})');
+            
+            if (strongRegex.test(password)) {
+                return { message: 'Strong', class: 'strong' };
+            } else if (mediumRegex.test(password)) {
+                return { message: 'Medium', class: 'medium' };
+            } else {
+                return { message: 'Weak', class: 'weak' };
+            }
+        }
+
         // Form validation
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            
+            // Validate passwords
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
             if (password !== confirmPassword) {
-                alert('Passwords do not match!');
+                showError('Passwords do not match!');
+                return;
+            }
+            
+            if (!checkPasswordStrength(password).message === 'Weak') {
+                showError('Please choose a stronger password');
                 return;
             }
             
@@ -172,14 +225,52 @@
             const formData = new FormData(this);
             const userData = Object.fromEntries(formData);
             
-            // Store user data in localStorage (in real app, this would be sent to server)
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            users.push(userData);
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            alert('Account created successfully! Please log in.');
-            window.location.href = 'login.html';
+            try {
+                // Show loading state
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Creating Account...';
+                
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Registration failed');
+                }
+
+                showSuccess('Account created successfully! Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError(error.message || 'Failed to create account. Please try again.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
         });
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert--error';
+            errorDiv.textContent = message;
+            document.querySelector('.card__body').insertBefore(errorDiv, document.querySelector('.auth-links'));
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert--success';
+            successDiv.textContent = message;
+            document.querySelector('.card__body').insertBefore(successDiv, document.querySelector('.auth-links'));
+        }
+        
     </script>
 </body>
 </html>
