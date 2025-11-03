@@ -216,7 +216,7 @@
                 return;
             }
             
-            if (!checkPasswordStrength(password).message === 'Weak') {
+            if (checkPasswordStrength(password).message === 'Weak') {
                 showError('Please choose a stronger password');
                 return;
             }
@@ -230,23 +230,27 @@
                 submitButton.disabled = true;
                 submitButton.innerHTML = 'Creating Account...';
                 
-                const response = await fetch('http://localhost:3000/api/auth/register', {
+                const response = await fetch('http://localhost:4000/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(userData)
+                    body: JSON.stringify({
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        email: userData.email,
+                        phone: userData.phone,
+                        password: userData.password
+                    })
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Registration failed');
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || error.message || 'Registration failed');
                 }
 
                 showSuccess('Account created successfully! Redirecting to login...');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
+                setTimeout(() => { window.location.assign('login.html'); }, 1200);
             } catch (error) {
                 console.error('Registration error:', error);
                 showError(error.message || 'Failed to create account. Please try again.');

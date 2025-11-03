@@ -100,9 +100,127 @@ const appData = {
 
 let filteredProducts = [...appData.products];
 
+const API_BASE = 'http://localhost:4000/api';
+
+let backendProductIndexByName = null;
+
+function preferredProductImage(name, backendImage) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('banana')) return 'images/categories/Fruits.png';
+  if (n.includes('milk')) return 'images/categories/Dairy.png';
+  return backendImage || '';
+}
+
+async function ensureBackendProductIndex() {
+  if (backendProductIndexByName) return backendProductIndexByName;
+  try {
+    const res = await fetch(`${API_BASE}/products`);
+    if (!res.ok) return (backendProductIndexByName = {});
+    const products = await res.json();
+    backendProductIndexByName = {};
+    products.forEach(p => {
+      if (p && p.name) backendProductIndexByName[p.name.toLowerCase()] = p.id;
+    });
+  } catch (_) {
+    backendProductIndexByName = {};
+  }
+  return backendProductIndexByName;
+}
+
+async function resolveBackendProductId(localProductId) {
+  const local = appData.products.find(p => p.id === localProductId);
+  if (!local) return null;
+  const index = await ensureBackendProductIndex();
+  let id = index[local.name.toLowerCase()];
+  if (id) return id;
+
+  const normalize = s => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const localNorm = normalize(local.name);
+  for (const [name, pid] of Object.entries(index)) {
+    if (localNorm && name.includes(localNorm.split(' ')[0])) {
+      id = pid; break;
+    }
+  }
+  if (id) return id;
+
+  try {
+    const payload = {
+      name: local.name,
+      description: local.description || '',
+      price: local.price,
+      category: local.category || 'Pantry',
+      image: resolveAssetPath(local.image),
+      stock: local.stock || 50
+    };
+    const createRes = await fetch(`${API_BASE}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (createRes.ok) {
+      const created = await createRes.json();
+      const newId = created.id || created.product?.id || created.Product?.id;
+      if (newId) {
+        backendProductIndexByName = null;
+        await ensureBackendProductIndex();
+        return newId;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+function transformCart(serverItems) {
+  if (!Array.isArray(serverItems)) return [];
+  return serverItems.map(item => {
+    const name = item.Product?.name || item.name || '';
+    const imageRaw = item.Product?.image || item.image || '';
+    return {
+      productId: item.ProductId || item.productId || (item.products && item.products.id),
+      name,
+      price: Number(item.Product?.price ?? item.price ?? 0),
+      quantity: Number(item.quantity || 1),
+      image: preferredProductImage(name, imageRaw)
+    };
+  });
+}
+
+function resolveAssetPath(pathOrEmoji) {
+  if (!pathOrEmoji) return '';
+  const s = String(pathOrEmoji);
+  if (s.startsWith('http')) return s;
+  if (s.startsWith('/')) return s.slice(1);
+  return s;
+}
+
+function cartImageMarkup(image) {
+  if (!image) return '';
+  const src = resolveAssetPath(image);
+  if (src.includes('/')) {
+    return `<img src="${src}" alt="Product" />`;
+  }
+  return src;
+}
+
+async function refreshCartCountFromBackend() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const res = await fetch(`${API_BASE}/cart`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return;
+    const raw = await res.json();
+    appData.cartItems = transformCart(raw);
+    updateCartCount();
+  } catch (_) {}
+}
+
 // Initialize the application based on current page
 document.addEventListener('DOMContentLoaded', function() {
   updateCartCount();
+  // Keep header cart count in sync with backend if logged in
+  refreshCartCountFromBackend();
+  // Warm up backend products index to avoid first-click delay
+  ensureBackendProductIndex();
   
   // Initialize based on current page
   const currentPage = getCurrentPage();
@@ -225,8 +343,22 @@ function initializeCartPage() {
 }
 
 function initializeCheckoutPage() {
-  loadCheckoutItems();
-  updateCheckoutTotals();
+  (async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const res = await fetch(`${API_BASE}/cart`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        const raw = await res.json();
+        appData.cartItems = transformCart(raw);
+      }
+    } catch (_) {}
+    loadCheckoutItems();
+    updateCheckoutTotals();
+  })();
   
   // Add checkout form handler
   const checkoutForm = document.getElementById('checkout-form');
@@ -253,7 +385,8 @@ function initializeLoginPage() {
     const formData = new FormData(e.target);
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/login', {
+        const API_BASE = 'http://localhost:4000/api';
+        const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -276,7 +409,7 @@ function initializeLoginPage() {
         if (data.user.userType === 'admin') {
             window.location.href = 'admin-dashboard.html';
         } else {
-            window.location.href = 'customer-dashboard.html';
+            window.location.href = 'account.html';
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -354,33 +487,40 @@ async function addToCart(productId) {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`, {
+    const backendId = await resolveBackendProductId(productId);
+    if (!backendId) {
+      throw new Error('Product not found');
+    }
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/cart`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ productId, quantity: 1 })
+      body: JSON.stringify({ productId: backendId, quantity: 1 })
     });
 
     if (!response.ok) {
-      throw new Error('Failed to add item to cart');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to add item to cart');
     }
 
-    const product = appData.products.find(p => p.id === productId);
-    if (product) {
-      showNotification(`${product.name} added to cart!`);
-    }
-    
-    const cartItems = await response.json();
-    appData.cartItems = cartItems;
+    const cartRes = await fetch(`${API_BASE}/cart`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const cartItemsRaw = await cartRes.json();
+    appData.cartItems = transformCart(cartItemsRaw);
     updateCartCount();
-    
+
+    const product = appData.products.find(p => p.id === productId);
+    if (product) { showNotification(`${product.name} added to cart!`); }
+
     if (window.location.pathname.includes('cart.html')) {
       loadCartItems();
     }
   } catch (error) {
     console.error('Add to cart error:', error);
-    showNotification('Failed to add item to cart');
+    showNotification(error.message || 'Failed to add item to cart');
   }
 }
 
@@ -394,16 +534,18 @@ function removeFromCart(productId) {
 
   (async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/cart`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ productId, quantity: 0 })
       });
 
       if (!response.ok) throw new Error('Failed to remove item');
 
-      const cartItems = await response.json();
-      appData.cartItems = cartItems;
+      const cartRes = await fetch(`${API_BASE}/cart`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const cartItemsRaw = await cartRes.json();
+      appData.cartItems = transformCart(cartItemsRaw);
       updateCartCount();
       loadCartItems();
       showNotification('Item removed from cart');
@@ -430,16 +572,18 @@ function updateCartQuantity(productId, action) {
 
   (async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/cart`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ productId, quantity: newQuantity })
       });
 
       if (!response.ok) throw new Error('Failed to update quantity');
 
-      const cartItems = await response.json();
-      appData.cartItems = cartItems;
+      const cartRes = await fetch(`${API_BASE}/cart`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const cartItemsRaw = await cartRes.json();
+      appData.cartItems = transformCart(cartItemsRaw);
       updateCartCount();
       loadCartItems();
     } catch (err) {
@@ -468,15 +612,17 @@ async function loadCartItems() {
   }
   
   try {
-    const response = await fetch(`http://localhost:3000/api/cart/${currentUser.id}`);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/cart`, { headers: { 'Authorization': `Bearer ${token}` } });
     if (!response.ok) {
-      throw new Error('Failed to fetch cart items');
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to fetch cart items (status ${response.status})`);
     }
     
-    const cartItems = await response.json();
-    appData.cartItems = cartItems;
+    const cartItemsRaw = await response.json();
+    appData.cartItems = transformCart(cartItemsRaw);
     
-    if (cartItems.length === 0) {
+    if (appData.cartItems.length === 0) {
       container.innerHTML = `
         <div class="empty-cart">
           <h3>Your cart is empty</h3>
@@ -488,9 +634,9 @@ async function loadCartItems() {
       return;
     }
     
-    container.innerHTML = cartItems.map(item => `
+    container.innerHTML = appData.cartItems.map(item => `
       <div class="cart-item">
-        <div class="cart-item__image">${item.image || ''}</div>
+        <div class="cart-item__image">${cartImageMarkup(item.image)}</div>
         <div class="cart-item__info">
           <div class="cart-item__name">${item.name}</div>
           <div class="cart-item__price">₹${(item.price).toFixed(2)} each</div>
@@ -511,7 +657,7 @@ async function loadCartItems() {
     container.innerHTML = `
       <div class="error-message">
         <h3>Failed to load cart items</h3>
-        <p>Please try again later</p>
+        <p>${error.message || 'Please try again later'}</p>
       </div>
     `;
   }
@@ -541,7 +687,7 @@ function loadCheckoutItems() {
   
   container.innerHTML = appData.cartItems.map(item => `
     <div class="checkout-item">
-      <div class="checkout-item__image">${item.image}</div>
+      <div class="checkout-item__image">${cartImageMarkup(item.image)}</div>
       <div class="checkout-item__info">
         <div class="checkout-item__name">${item.name}</div>
         <div class="checkout-item__quantity">Qty: ${item.quantity}</div>
